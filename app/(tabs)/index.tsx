@@ -1,5 +1,11 @@
-import Board from "@/components/Board";
+import Game from "@/components/Game";
+import { Stack } from "expo-router";
 
 export default function Index() {
-	return <Board />;
+  return (<>
+  <Stack.Screen options={{ title: "Calculator", headerShown: false }} />
+  <Game />
+  </>);
 }
+
+
