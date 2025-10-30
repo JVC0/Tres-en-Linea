@@ -8,7 +8,7 @@ const Board = ({
   onplay 
 }: { 
   playerTurn: boolean; 
-  squares: Array<string | null>; 
+  squares: (string | null)[]; 
   onplay: Function; 
 }) => {
   const { width } = useWindowDimensions();
@@ -37,7 +37,7 @@ const Board = ({
     status = "Siguiente jugador: " + (playerTurn ? "❌" : "🟢");
   }
   
-  function calculateWinner(squares: Array<string | null>) {
+  function calculateWinner(squares: (string | null)[]) {
     const lines = [
       [0, 1, 2],
       [3, 4, 5],
@@ -57,27 +57,35 @@ const Board = ({
     return null;
   }
 
+    const renderBoard = () => {
+    const rows = [];
+    for (let row = 0; row < 3; row++) {
+      const boxes = [];
+      for (let col = 0; col < 3; col++) {
+        const index = row * 3 + col;
+        boxes.push(
+          <Box 
+            key={index}
+            Value={squares[index]} 
+            onPress={() => handleBoxPress(index)} 
+          />
+        );
+      }
+      rows.push(
+        <View key={row} style={styles.boardrow}>
+          {boxes}
+        </View>
+      );
+    }
+    return rows;
+  };
   return (
     <View style={styles.container}>
       <View style={[
         styles.board,
         isMobile && styles.mobileBoard
       ]}>
-        <View style={styles.boardrow}>	
-          <Box Value={squares[0]} onPress={() => {handleBoxPress(0)}} />
-          <Box Value={squares[1]} onPress={() => {handleBoxPress(1)}}/>
-          <Box Value={squares[2]} onPress={() => {handleBoxPress(2)}}/>
-        </View>
-        <View style={styles.boardrow}>
-          <Box Value={squares[3]} onPress={() => {handleBoxPress(3)}}/>
-          <Box Value={squares[4]} onPress={() => {handleBoxPress(4)}}/>
-          <Box Value={squares[5]} onPress={() => {handleBoxPress(5)}}/>
-        </View>
-        <View style={styles.boardrow}>
-          <Box Value={squares[6]} onPress={() => {handleBoxPress(6)}}/>
-          <Box Value={squares[7]} onPress={() => {handleBoxPress(7)}}/>
-          <Box Value={squares[8]} onPress={() => {handleBoxPress(8)}}/>
-        </View>
+        {renderBoard()}
       </View>
       <Text style={[
         styles.status,
@@ -89,6 +97,9 @@ const Board = ({
     </View>
   );
 };
+
+
+
 
 const styles = StyleSheet.create({
   container: {
