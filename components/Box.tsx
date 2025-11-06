@@ -4,13 +4,35 @@ import { GestureResponderEvent, StyleSheet, Text, TouchableOpacity, useWindowDim
 const Box = ({
   Value,
   onPress,
+  boardSize = 3,
 }: {
   Value: string | null;
   onPress: (event: GestureResponderEvent) => void;
+  boardSize?: number;
 }) => {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
-  const boxSize = isMobile ? 70 : 90;
+  
+  const getBoxSize = () => {
+    if (isMobile) {
+    
+      if (boardSize === 3) return 70;
+      if (boardSize === 4) return 60;
+      if (boardSize === 5) return 50;
+      if (boardSize === 6) return 42;
+      return 36; 
+    } else {
+      
+      if (boardSize === 3) return 90;
+      if (boardSize === 4) return 75;
+      if (boardSize === 5) return 60;
+      if (boardSize === 6) return 50;
+      return 43; 
+    }
+  };
+  
+  const boxSize = getBoxSize();
+  const fontSize = boxSize * 0.4; 
 
   return (
     <TouchableOpacity 
@@ -22,6 +44,7 @@ const Box = ({
     >
       <Text style={[
         styles.text,
+        { fontSize },
         Value === 'X' && styles.xText,
         Value === 'O' && styles.oText
       ]}>
@@ -50,7 +73,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   text: {
-    fontSize: 28,
     fontWeight: "bold",
   },
   xText: {
@@ -58,7 +80,7 @@ const styles = StyleSheet.create({
   },
   oText: {
     color: '#27ae60',
-}
+  }
 });
 
 export default Box;

@@ -5,11 +5,13 @@ import Box from "./Box";
 const Board = ({ 
   playerTurn, 
   squares, 
-  onplay 
+  onplay,
+  boardSize = 3
 }: { 
   playerTurn: boolean; 
   squares: (string | null)[]; 
-  onplay: Function; 
+  onplay: Function;
+  boardSize?: number;
 }) => {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
@@ -27,6 +29,47 @@ const Board = ({
     onplay(newSquares);
   }
   
+  function calculateWinner(squares: (string | null)[]) {
+    const lines: number[][] = [];
+    
+    for (let i = 0; i < boardSize; i++) {
+      const row = [];
+      for (let j = 0; j < boardSize; j++) {
+        row.push(i * boardSize + j);
+      }
+      lines.push(row);
+    }
+    
+    for (let i = 0; i < boardSize; i++) {
+      const col = [];
+      for (let j = 0; j < boardSize; j++) {
+        col.push(j * boardSize + i);
+      }
+      lines.push(col);
+    }
+    
+    const diag1 = [];
+    for (let i = 0; i < boardSize; i++) {
+      diag1.push(i * boardSize + i);
+    }
+    lines.push(diag1);
+    
+    const diag2 = [];
+    for (let i = 0; i < boardSize; i++) {
+      diag2.push(i * boardSize + (boardSize - 1 - i));
+    }
+    lines.push(diag2);
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const first = squares[line[0]];
+      if (first && line.every(index => squares[index] === first)) {
+        return first;
+      }
+    }
+    return null;
+  }
+  
   const winner = calculateWinner(squares);
   let status;
   if (winner) {
@@ -36,38 +79,19 @@ const Board = ({
   } else {
     status = "Siguiente jugador: " + (playerTurn ? "❌" : "🟢");
   }
-  
-  function calculateWinner(squares: (string | null)[]) {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6]
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
-      }
-    }
-    return null;
-  }
 
-    const renderBoard = () => {
+  const renderBoard = () => {
     const rows = [];
-    for (let row = 0; row < 3; row++) {
+    for (let row = 0; row < boardSize; row++) {
       const boxes = [];
-      for (let col = 0; col < 3; col++) {
-        const index = row * 3 + col;
+      for (let col = 0; col < boardSize; col++) {
+        const index = row * boardSize + col;
         boxes.push(
           <Box 
             key={index}
             Value={squares[index]} 
-            onPress={() => handleBoxPress(index)} 
+            onPress={() => handleBoxPress(index)}
+            boardSize={boardSize}
           />
         );
       }
@@ -79,6 +103,7 @@ const Board = ({
     }
     return rows;
   };
+  
   return (
     <View style={styles.container}>
       <View style={[
@@ -97,9 +122,6 @@ const Board = ({
     </View>
   );
 };
-
-
-
 
 const styles = StyleSheet.create({
   container: {
