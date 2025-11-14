@@ -18,7 +18,6 @@ const Game = () => {
     setHistory(nextHistory);
     setCurrentMove(nextHistory.length - 1);
     
-
     const winner = calculateWinner(nextSquares, boardSize);
     if (winner) {
       setScores(prev => ({
@@ -40,13 +39,24 @@ const Game = () => {
   }
   
   function resetGame() {
+    const winner = calculateWinner(currentSquares, boardSize);
+    const isDraw = !winner && currentSquares.every(square => square !== null);
+    
+    if (!winner && !isDraw && currentMove > 0) {
+      const currentPlayer = playerTurn ? "X" : "O";
+      const opponent = currentPlayer === "X" ? "O" : "X";
+      
+      setScores(prev => ({
+        ...prev,
+        [opponent]: prev[opponent as keyof typeof prev] + 1
+      }));
+    }
+    
     setHistory([Array(boardSize * boardSize).fill(null)]);
     setCurrentMove(0);
   }
   
-  function resetScores() {
-    setScores({ X: 0, O: 0 });
-  }
+  
   
   function calculateWinner(squares: (string | null)[], size: number) {
     const lines: number[][] = [];
@@ -92,7 +102,13 @@ const Game = () => {
   const winner = calculateWinner(currentSquares, boardSize);
   const isDraw = !winner && currentSquares.every(square => square !== null);
   
-
+  const isGameInProgress = !winner && !isDraw && currentMove > 0;
+  function resetScores() {
+    if(!isGameInProgress){
+      setScores({ X: 0, O: 0 });
+    }
+    
+  }
   const BoardPreview = ({ size }: { size: number }) => {
     const cellSize = isMobile ? 12 : 16;
     const gap = 2;
@@ -201,8 +217,7 @@ const Game = () => {
       ]}>
         <View style={styles.boardSection}>
           <Text style={styles.title}>Tres en Raya</Text>
-          
-          {/* Scoreboard */}
+        
           <View style={styles.scoreboard}>
             <View style={styles.scoreCard}>
               <Text style={styles.scoreLabel}>❌ Jugador X</Text>
@@ -238,7 +253,7 @@ const Game = () => {
             boardSize={boardSize}
           />
           
-          {(winner || isDraw) && (
+          {(winner || isDraw || isGameInProgress) && (
             <TouchableOpacity
               style={styles.resetButton}
               onPress={resetGame}

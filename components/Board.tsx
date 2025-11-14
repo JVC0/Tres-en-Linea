@@ -17,7 +17,7 @@ const Board = ({
   const isMobile = width < 768;
   
   function handleBoxPress(boxIndex: number) {
-    if (squares[boxIndex] || calculateWinner(squares)) {
+    if (squares[boxIndex] || calculateWinner(squares).winner) {
       return;
     }
     const newSquares = squares.slice();
@@ -64,13 +64,23 @@ const Board = ({
       const line = lines[i];
       const first = squares[line[0]];
       if (first && line.every(index => squares[index] === first)) {
-        return first;
+        return {
+          winner: first,
+          winningLine: line
+        };
       }
     }
-    return null;
+    
+    return {
+      winner: null,
+      winningLine: null
+    };
   }
   
-  const winner = calculateWinner(squares);
+  const winnerInfo = calculateWinner(squares);
+  const winner = winnerInfo.winner;
+  const winningLine = winnerInfo.winningLine;
+  
   let status;
   if (winner) {
     status = "🎉 ¡Ganador: " + (winner === "X" ? "❌" : "🟢") + "!";
@@ -86,12 +96,15 @@ const Board = ({
       const boxes = [];
       for (let col = 0; col < boardSize; col++) {
         const index = row * boardSize + col;
+        const isWinningBox = winningLine && winningLine.includes(index);
+        
         boxes.push(
           <Box 
             key={index}
             Value={squares[index]} 
             onPress={() => handleBoxPress(index)}
             boardSize={boardSize}
+            isWinningBox={isWinningBox}
           />
         );
       }
