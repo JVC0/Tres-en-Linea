@@ -2,33 +2,45 @@ import React from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Box from "./Box";
 
-const Board = ({ 
-  playerTurn, 
-  squares, 
+const Board = ({
+  playerTurn,
+  squares,
   onplay,
-  boardSize = 3
-}: { 
-  playerTurn: boolean; 
-  squares: (string | null)[]; 
+  boardSize = 3,
+  gameMode = 'single',
+  isMyTurn = true,
+  playerSymbol
+}: {
+  playerTurn: boolean;
+  squares: (string | null)[];
   onplay: Function;
   boardSize?: number;
+  gameMode?: 'single' | 'multi';
+  isMyTurn?: boolean;
+  playerSymbol?: 'X' | 'O';
 }) => {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
-  
+
   function handleBoxPress(boxIndex: number) {
+    if (gameMode === 'multi' && !isMyTurn) {
+      return;
+    }
+    
     if (squares[boxIndex] || calculateWinner(squares).winner) {
       return;
     }
     const newSquares = squares.slice();
-    if (playerTurn) {
+    if (gameMode === 'multi' && playerSymbol) {
+      newSquares[boxIndex] = playerSymbol;
+    } else if (playerTurn) {
       newSquares[boxIndex] = "X";
     } else {
       newSquares[boxIndex] = "O";
     }
     onplay(newSquares);
   }
-  
+
   function calculateWinner(squares: (string | null)[]) {
     const lines: number[][] = [];
     
@@ -48,12 +60,14 @@ const Board = ({
       lines.push(col);
     }
     
+
     const diag1 = [];
     for (let i = 0; i < boardSize; i++) {
       diag1.push(i * boardSize + i);
     }
     lines.push(diag1);
     
+
     const diag2 = [];
     for (let i = 0; i < boardSize; i++) {
       diag2.push(i * boardSize + (boardSize - 1 - i));
@@ -76,18 +90,26 @@ const Board = ({
       winningLine: null
     };
   }
-  
+
   const winnerInfo = calculateWinner(squares);
   const winner = winnerInfo.winner;
   const winningLine = winnerInfo.winningLine;
-  
+
   let status;
+  const hasMoves = squares.some(square => square === "X" || square === "O");
+  const allSquaresFilled = squares.length > 0 && squares.every(square => square === "X" || square === "O");
+  const isDraw = !winner && hasMoves && allSquaresFilled;
+  
   if (winner) {
     status = "🎉 ¡Ganador: " + (winner === "X" ? "❌" : "🟢") + "!";
-  } else if (squares.every(square => square !== null)) {
+  } else if (isDraw) {
     status = "🤝 ¡Empate!";
   } else {
-    status = "Siguiente jugador: " + (playerTurn ? "❌" : "🟢");
+    if (gameMode === 'multi') {
+      status = isMyTurn ? "✅ Tu turno" : "⏳ Turno del oponente";
+    } else {
+      status = "Siguiente jugador: " + (playerTurn ? "❌" : "🟢");
+    }
   }
 
   const renderBoard = () => {
@@ -96,7 +118,7 @@ const Board = ({
       const boxes = [];
       for (let col = 0; col < boardSize; col++) {
         const index = row * boardSize + col;
-        const isWinningBox = winningLine && winningLine.includes(index);
+        const isWinningBox = !!(winningLine && winningLine.includes(index));
         
         boxes.push(
           <Box 
@@ -116,22 +138,24 @@ const Board = ({
     }
     return rows;
   };
-  
+
   return (
     <View style={styles.container}>
       <View style={[
         styles.board,
-        isMobile && styles.mobileBoard
+        isMobile && styles.mobileBoard,
+        gameMode === 'multi' && !isMyTurn && styles.notMyTurnBoard
       ]}>
         {renderBoard()}
       </View>
       <Text style={[
         styles.status,
         winner && styles.winnerText,
-        isMobile && styles.mobileStatus
+        isMobile && styles.mobileStatus,
+        gameMode === 'multi' && !isMyTurn && styles.waitingStatus
       ]}>
         {status}
-      </Text>			
+      </Text>
     </View>
   );
 };
@@ -153,6 +177,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 8,
   },
+  notMyTurnBoard: {
+    opacity: 0.8,
+  },
   mobileBoard: {
     transform: [{ scale: 0.9 }],
   },
@@ -170,6 +197,10 @@ const styles = StyleSheet.create({
   mobileStatus: {
     fontSize: 18,
     marginTop: 20,
+  },
+  waitingStatus: {
+    color: '#7f8c8d',
+    fontStyle: 'italic',
   },
   winnerText: {
     color: '#e74c3c',
